@@ -1,5 +1,6 @@
 const axios = require("axios");
-
+const FAST2SMS_API_KEY = process.env.FAST2SMS_API_KEY;
+console.log("FAST2SMS_API_KEY:", FAST2SMS_API_KEY); // Debugging line to check if the API key is loaded
 const sendSMS = async (phone, message) => {
   try {
     const res = await axios.post(
@@ -12,7 +13,7 @@ const sendSMS = async (phone, message) => {
       },
       {
         headers: {
-          "authorization": process.env.FAST2SMS_API_KEY,
+          "authorization": FAST2SMS_API_KEY,
           "Content-Type": "application/json",
         },
       }
@@ -20,7 +21,7 @@ const sendSMS = async (phone, message) => {
 
     return res.data;
   } catch (error) {
-    console.error("SMS sending failed:", error.message);
+    console.error("SMS sending failed:", error.response?.data || error.message);
     throw new Error("Failed to send SMS");
   }
 };

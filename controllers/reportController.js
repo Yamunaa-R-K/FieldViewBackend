@@ -1,36 +1,52 @@
 const { get } = require("http");
 const pool = require("../config/db");
 const crypto = require("crypto");
-
-
+const multer = require("multer");
 const submitReport = async (req, res) => {
-  const userId = req.user.id;
-  const { canSubmit } = req.user; 
-  const { report_title, report_details, location_lat, location_long } = req.body; 
-  const photo = req.file?.filename; 
-  const files = req.files?.map(file => file.filename); 
+  if (!req.user) {
+    return res.status(401).json({ message: "Unauthorized: Missing user info" });
+  }
+
+  const { id: userId, canSubmit } = req.user;
+  const { report_title, report_details, location_lat, location_long } = req.body;
+
+  const photo = req.files?.photo?.[0]?.filename || null;
+  const files = req.files?.files?.map(file => file.filename) || [];
 
   if (!canSubmit) {
     return res.status(403).json({ message: "Permission denied to submit reports." });
   }
 
-  if (!report_title || !report_details || (!photo && !files?.length)) {
+  if (!report_title || !report_details || (!photo && files.length === 0)) {
     return res.status(400).json({ message: "Required fields missing" });
   }
 
   try {
-    await pool.execute(
+    const [result] = await pool.execute(
       `INSERT INTO reports 
-       (user_id, report_title, report_details, location_lat, location_long, photo, files) 
+        (user_id, report_title, report_details, location_lat, location_long, photo, files)
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
-      [userId, report_title, report_details, location_lat, location_long, photo, JSON.stringify(files)]
+      [
+        userId,
+        report_title,
+        report_details,
+        location_lat || null,
+        location_long || null,
+        photo,
+        JSON.stringify(files)
+      ]
     );
 
-    res.status(201).json({ message: "Report submitted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Internal server error", error });
+    res.status(201).json({ message: "Report submitted successfully", reportId: result.insertId });
+  } catch (err) {
+    console.error("Error submitting report:", err);
+    res.status(500).json({ message: "Internal Server Error" });
   }
 };
+
+module.exports = { submitReport };
+
+
 
 
 const getMyReports = async (req, res) => {
@@ -95,7 +111,7 @@ const signReport = async (req, res) => {
     .digest("hex");
 
   await pool.execute(
-    `UPDATE reports SET status = 'Signed', signed_by = ?, signed_at = NOW(), signature = ? WHERE id = ?`,
+    `UPDATE reports SET status = 'Approved', signed_by = ?, signed_at = NOW(), signature = ? WHERE id = ?`,
     [signerId, signature, reportId]
   );
 
@@ -114,7 +130,7 @@ const getSignedReports = async (req, res) => {
     `SELECT r.*, u.full_name 
      FROM reports r 
      JOIN users u ON r.user_id = u.id 
-     WHERE r.status = 'Signed' 
+     WHERE r.status = 'Approved' 
      ORDER BY r.signed_at DESC`
   );
 

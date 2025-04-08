@@ -2,7 +2,7 @@ const bcrypt = require("bcryptjs");
 const pool = require("../config/db");
 const assignPermissions = require("../helpers/utils").assignPermissions
 const generateToken = require("../helpers/utils").generateToken;
-const sendSMS = require("../helpers/sendSMS");
+//const sendSMS = require("../helpers/sendSMS");
 
 
 // User Registration
@@ -26,6 +26,7 @@ const registerUser = async (req, res) => {
 
       res.status(201).json({ message: "User registered successfully!" });
   } catch (error) {
+      console.error("Registration Error:", error);
       res.status(500).json({ error: error.message });
   }
 };
@@ -87,9 +88,9 @@ const loginUser = async (req, res) => {
 
     // For testing, just return it in the response (in real, send via SMS API)
     const message = `Your OTP for login is ${otp}. Do not share this with anyone.`;
-    await sendSMS(user.mobile_number, message);
+    //await sendSMS(user.mobile_number, message);
     res.json({
-      message: "OTP sent to registered mobile number",
+      message: message,
       userId: user.id,
       otp: otp 
     });
