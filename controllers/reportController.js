@@ -149,7 +149,7 @@ const getReportStatuses = async (req, res) => {
   }
 
   const [reports] = await pool.execute(
-    `SELECT id, report_title, status FROM reports WHERE user_id = ? ORDER BY created_at DESC`,
+    `SELECT id, report_title, status, submitted_at FROM reports WHERE user_id = ? ORDER BY created_at DESC`,
     [userId]
   );
 
