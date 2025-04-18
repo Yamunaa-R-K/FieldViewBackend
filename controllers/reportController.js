@@ -8,8 +8,11 @@ const submitReport = async (req, res) => {
   }
 
   const { id: userId, canSubmit } = req.user;
+  console.log("Headers:", req.headers);
+  console.log("Body:", req.body);
+  console.log("Files:", req.files);
   const { report_title, report_details, location_lat, location_long } = req.body;
-
+  console.log("Report Details:", req.body); // Debugging line to check report details
   const photo = req.files?.photo?.[0]?.filename || null;
   const files = req.files?.files?.map(file => file.filename) || [];
 
@@ -44,7 +47,6 @@ const submitReport = async (req, res) => {
   }
 };
 
-module.exports = { submitReport };
 
 
 

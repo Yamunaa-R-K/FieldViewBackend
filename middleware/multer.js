@@ -13,14 +13,26 @@ const storage = multer.diskStorage({
 });
 
 // Updated File Filter to Allow Images and PDFs
-const fileFilter = (req, file, cb) => {
-  if (file.mimetype.startsWith("image/") || file.mimetype === "application/pdf") {
-    cb(null, true); // Accept images and PDFs
-  } else {
-    cb(new Error("Only image and PDF files are allowed!"), false); // Reject unsupported file types
-  }
-};
+// const fileFilter = (req, file, cb) => {
+//   // List of allowed MIME types
+//   const allowedTypes = [
+//     "image/jpeg", 
+//     "image/png", 
+//     "image/gif", 
+//     "application/pdf"
+//   ];
 
+//   // Check if the file's MIME type is in the list of allowed types
+//   if (allowedTypes.includes(file.mimetype)) {
+//     cb(null, true); // Accept the file
+//   } else {
+//     cb(new Error("Only JPEG, PNG, GIF images and PDF files are allowed!"), false); // Reject the file
+//   }
+// };
+const fileFilter = (req, file, cb) => {
+  // Accept all file types for now
+  cb(null, true);
+};
 // Configure Multer with File Size Limit and Updated Filter
 const upload = multer({
   storage,

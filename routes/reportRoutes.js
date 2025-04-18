@@ -18,10 +18,14 @@ console.log("Submit Report Function:", typeof submitReport);
 
 router.post(
   "/",
+  (req, res, next) => {
+    console.log("Incoming request to /reports/");
+    next();
+  },
   verifyToken,
   upload.fields([
-    { name: "photo", maxCount: 1 }, 
-    { name: "files", maxCount: 5 }, 
+    { name: "photo", maxCount: 1 },
+    { name: "files", maxCount: 5 },
   ]),
   submitReport
 );
