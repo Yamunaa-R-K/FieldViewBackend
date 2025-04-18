@@ -99,6 +99,9 @@ const loginUser = async (req, res) => {
   }
 };
 const viewProfile = async (req, res) => {
+  console.log("Inside viewProfile Route");
+  console.log("User ID from token:", req.user.id); // Debug log
+  
   const userId = req.user.id; // Extract user ID from token (verifyToken middleware)
 
   try {
@@ -123,10 +126,12 @@ const viewProfile = async (req, res) => {
 };
 
 const updateProfile = async (req, res) => {
+  console.log("Inside updateProfile Route");
   const userId = req.user.id; // Extract user ID from token
-
+  console.log("User ID from token:", userId);
   // Fields users can update
   const { fullName, designation, workplace, mobileNumber } = req.body;
+  const { roleType, canSubmit, canSign } = assignPermissions(designation);
 
   if (!fullName || !designation || !workplace || !mobileNumber) {
       return res.status(400).json({ error: "All fields are required for update" });
@@ -134,8 +139,8 @@ const updateProfile = async (req, res) => {
 
   try {
       const [result] = await pool.execute(
-          `UPDATE users SET full_name = ?, designation = ?, workplace = ?, mobile_number = ? WHERE id = ?`,
-          [fullName, designation, workplace, mobileNumber, userId]
+          `UPDATE users SET full_name = ?, designation = ?, workplace = ?, mobile_number = ?, role_type = ?, can_submit = ?, can_sign = ? WHERE id = ?`,
+          [fullName, designation, workplace, mobileNumber,roleType,canSign,canSubmit, userId]
       );
 
       if (result.affectedRows === 0) {
@@ -144,6 +149,7 @@ const updateProfile = async (req, res) => {
 
       res.status(200).json({ message: "Profile updated successfully!" });
   } catch (error) {
+      console.error("Update Profile Error:", error);
       res.status(500).json({ message: "Internal server error", error: error.message });
   }
 };
