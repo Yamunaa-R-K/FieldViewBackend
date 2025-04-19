@@ -61,8 +61,8 @@ const getMyReports = async (req, res) => {
 
   try {
     const [reports] = await pool.execute(
-      `SELECT id, user_id, report_title, report_details, location_lat, location_long, photo, files, created_at 
-       FROM reports WHERE user_id = ? ORDER BY created_at DESC`,
+      `SELECT id, user_id, report_title, report_details, location_lat, location_long, photo, files, submitted_at 
+       FROM reports WHERE user_id = ? ORDER BY submitted_at DESC`,
       [userId]
     );
 
@@ -83,19 +83,32 @@ const getPendingReports = async (req, res) => {
   const { canSign } = req.user;
 
   if (!canSign) {
-    return res.status(403).json({ message: "Access denied to view pending reports." });
+      return res.status(403).json({ message: "Access denied to view pending reports." });
   }
 
-  const [reports] = await pool.execute(
-    `SELECT r.*, u.full_name 
-     FROM reports r 
-     JOIN users u ON r.user_id = u.id 
-     WHERE r.status = 'Pending' 
-     ORDER BY r.created_at DESC`
-  );
+  try {
+      const [reports] = await pool.execute(`
+          SELECT r.*, u.full_name 
+          FROM reports r 
+          JOIN users u ON r.user_id = u.id 
+          WHERE r.status = 'Pending' 
+          ORDER BY r.submitted_at DESC
+      `);
 
-  res.json({ reports });
+      const enrichedReports = reports.map(report => ({
+          ...report,
+          photoUrl: report.photo ? `${req.protocol}://${req.get("host")}/uploads/${report.photo}` : null,
+          fileUrls: report.files ? JSON.parse(report.files).map(file => `${req.protocol}://${req.get("host")}/uploads/${file}`) : [],
+      }));
+
+      res.json({ reports: enrichedReports });
+  } catch (error) {
+      console.error("Error fetching pending reports:", error);
+      res.status(500).json({ message: "Internal server error", error });
+  }
 };
+
+
 
 // 4. Sign Report (Only if canSign === true)
 const signReport = async (req, res) => {
@@ -149,7 +162,7 @@ const getReportStatuses = async (req, res) => {
   }
 
   const [reports] = await pool.execute(
-    `SELECT id, report_title, status, submitted_at FROM reports WHERE user_id = ? ORDER BY created_at DESC`,
+    `SELECT id, report_title, status, submitted_at FROM reports WHERE user_id = ? ORDER BY submitted_at DESC`,
     [userId]
   );
 
