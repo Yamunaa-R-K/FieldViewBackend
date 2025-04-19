@@ -97,8 +97,10 @@ const getPendingReports = async (req, res) => {
 
       const enrichedReports = reports.map(report => ({
           ...report,
-          photoUrl: report.photo ? `${req.protocol}://${req.get("host")}/uploads/${report.photo}` : null,
-          fileUrls: report.files ? JSON.parse(report.files).map(file => `${req.protocol}://${req.get("host")}/uploads/${file}`) : [],
+          photoUrl: report.photo ? `/uploads/${report.photo}` : null, // Relative path for photo
+          fileUrls: report.files
+              ? JSON.parse(report.files).map(file => `/uploads/${file}`) // Relative paths for files
+              : [],
       }));
 
       res.json({ reports: enrichedReports });
