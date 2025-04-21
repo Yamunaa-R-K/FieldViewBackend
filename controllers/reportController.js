@@ -117,22 +117,51 @@ const signReport = async (req, res) => {
   const reportId = req.params.id;
   const signerId = req.user.id;
   const { role, canSign } = req.user;
+  const { remarks } = req.body; 
 
   if (!canSign) {
-    return res.status(403).json({ message: "Permission denied to sign reports." });
+      return res.status(403).json({ message: "Permission denied to sign reports." });
   }
 
   const signature = crypto
-    .createHash("sha256")
-    .update(`${reportId}:${signerId}:${role}:${Date.now()}`)
-    .digest("hex");
+      .createHash("sha256")
+      .update(`${reportId}:${signerId}:${role}:${Date.now()}`)
+      .digest("hex");
 
-  await pool.execute(
-    `UPDATE reports SET status = 'Approved', signed_by = ?, signed_at = NOW(), signature = ? WHERE id = ?`,
-    [signerId, signature, reportId]
-  );
+  try {
+      await pool.execute(
+          `UPDATE reports SET status = 'Approved', signed_by = ?, signed_at = NOW(), signature = ?, remarks = ? WHERE id = ?`,
+          [signerId, signature, remarks || null, reportId] 
+      );
 
-  res.json({ message: "Report signed successfully", signature });
+      res.json({ message: "Report signed successfully", signature });
+  } catch (error) {
+      console.error("Error signing report:", error);
+      res.status(500).json({ message: "Internal server error", error });
+  }
+};
+
+const rejectReport = async (req, res) => {
+  const reportId = req.params.id;
+  const reviewerId = req.user.id;
+  const { canSign } = req.user;
+  const { remarks } = req.body; // Get rejection remarks from request body
+
+  if (!canSign) {
+      return res.status(403).json({ message: "Permission denied to reject reports." });
+  }
+
+  try {
+      await pool.execute(
+          `UPDATE reports SET status = 'Rejected', signed_by = ?, signed_at = NOW(), remarks = ? WHERE id = ?`,
+          [reviewerId, remarks || "No remarks provided", reportId] // Store remarks or default text
+      );
+
+      res.json({ message: "Report rejected successfully" });
+  } catch (error) {
+      console.error("Error rejecting report:", error);
+      res.status(500).json({ message: "Internal server error", error });
+  }
 };
 
 // 5. Get Signed Reports (Only if canSign === true)
@@ -177,5 +206,6 @@ module.exports = {
   getPendingReports,
   signReport,
   getSignedReports,
-  getReportStatuses
+  getReportStatuses,
+  rejectReport
 };

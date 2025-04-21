@@ -125,29 +125,32 @@ const viewProfile = async (req, res) => {
   }
 };
 
+
 const updateProfile = async (req, res) => {
   console.log("Inside updateProfile Route");
-  const userId = req.user.id; // Extract user ID from token
+  const userId = req.user.id;
   console.log("User ID from token:", userId);
-  // Fields users can update
+
   const { fullName, designation, workplace, mobileNumber } = req.body;
-  const { roleType, canSubmit, canSign } = assignPermissions(designation);
 
   if (!fullName || !designation || !workplace || !mobileNumber) {
       return res.status(400).json({ error: "All fields are required for update" });
   }
 
+  // Determine role-based permissions dynamically
+  const { roleType, canSubmit, canSign } = assignPermissions(designation); 
+
   try {
       const [result] = await pool.execute(
           `UPDATE users SET full_name = ?, designation = ?, workplace = ?, mobile_number = ?, role_type = ?, can_submit = ?, can_sign = ? WHERE id = ?`,
-          [fullName, designation, workplace, mobileNumber,roleType,canSign,canSubmit, userId]
+          [fullName, designation, workplace, mobileNumber, roleType, canSubmit, canSign, userId]
       );
 
       if (result.affectedRows === 0) {
           return res.status(404).json({ message: "User not found or no changes made" });
       }
 
-      res.status(200).json({ message: "Profile updated successfully!" });
+      res.status(200).json({ message: "Profile updated successfully!", roleType, canSubmit, canSign });
   } catch (error) {
       console.error("Update Profile Error:", error);
       res.status(500).json({ message: "Internal server error", error: error.message });

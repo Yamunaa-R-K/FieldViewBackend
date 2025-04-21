@@ -8,8 +8,10 @@ const {
   getMyReports,
   getPendingReports,
   signReport,
+  rejectReport,
   getSignedReports,
   getReportStatuses,
+  rejectReport,
 } = require("../controllers/reportController");
 
 console.log("Multer Upload Type:", typeof upload);
@@ -33,6 +35,7 @@ router.post(
 router.get("/mine", verifyToken, getMyReports);
 router.get("/pending", verifyToken, getPendingReports);
 router.patch("/:id/sign", verifyToken, signReport);
+router.patch("/:id/reject", verifyToken, rejectReport);
 router.get("/signed", verifyToken, getSignedReports);
 router.get("/my-statuses", verifyToken, getReportStatuses);
 
