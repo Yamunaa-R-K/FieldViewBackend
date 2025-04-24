@@ -131,7 +131,7 @@ const loginUser = async (req, res) => {
 
         // Send OTP via AWS SNS
         const params = {
-            Message: `Your OTP for login is ${otp}. Sent by FieldView Admin: Yamunaa. Do not share this with anyone.`,
+            Message: `Your OTP for login is ${otp} to continuw with FieldView. Do not share this with anyone.`,
             //PhoneNumber: user.mobile_number //
             //  Ensure E.164 format, e.g., "+91XXXXXXXXXX"
             PhoneNumber: `+919042747715` // Assuming mobile_number is in the correct format

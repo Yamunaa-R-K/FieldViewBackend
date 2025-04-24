@@ -15,7 +15,7 @@ const submitReport = async (req, res) => {
   console.log("Report Details:", req.body); // Debugging line to check report details
   const photo = req.files?.photo?.[0]?.filename || null;
   const files = req.files?.files?.map(file => file.filename) || [];
-
+  const assignedTo = "Kavitha";
   if (!canSubmit) {
     return res.status(403).json({ message: "Permission denied to submit reports." });
   }
@@ -27,8 +27,8 @@ const submitReport = async (req, res) => {
   try {
     const [result] = await pool.execute(
       `INSERT INTO reports 
-        (user_id, report_title, report_details, location_lat, location_long, photo, files)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`,
+        (user_id, report_title, report_details, location_lat, location_long, photo, files,assigned_to)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         userId,
         report_title,
@@ -36,7 +36,8 @@ const submitReport = async (req, res) => {
         location_lat || null,
         location_long || null,
         photo,
-        JSON.stringify(files)
+        JSON.stringify(files),
+        assignedTo
       ]
     );
 
@@ -117,7 +118,7 @@ const signReport = async (req, res) => {
   const reportId = req.params.id;
   const signerId = req.user.id;
   const { role, canSign } = req.user;
-  const { remarks } = req.body; 
+  //const { remarks } = req.body; 
 
   if (!canSign) {
       return res.status(403).json({ message: "Permission denied to sign reports." });
@@ -130,8 +131,8 @@ const signReport = async (req, res) => {
 
   try {
       await pool.execute(
-          `UPDATE reports SET status = 'Approved', signed_by = ?, signed_at = NOW(), signature = ?, remarks = ? WHERE id = ?`,
-          [signerId, signature, remarks || null, reportId] 
+          `UPDATE reports SET status = 'Approved', signed_by = ?, signed_at = NOW(), signature = ? WHERE id = ?`,
+          [signerId, signature, reportId] 
       );
 
       res.json({ message: "Report signed successfully", signature });
@@ -145,7 +146,7 @@ const rejectReport = async (req, res) => {
   const reportId = req.params.id;
   const reviewerId = req.user.id;
   const { canSign } = req.user;
-  const { remarks } = req.body; // Get rejection remarks from request body
+  //const { remarks } = req.body; // Get rejection remarks from request body
 
   if (!canSign) {
       return res.status(403).json({ message: "Permission denied to reject reports." });
