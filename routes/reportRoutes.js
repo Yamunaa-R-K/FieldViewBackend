@@ -11,7 +11,6 @@ const {
   rejectReport,
   getSignedReports,
   getReportStatuses,
-  rejectReport,
 } = require("../controllers/reportController");
 
 console.log("Multer Upload Type:", typeof upload);
